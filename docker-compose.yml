@@ -1,0 +1,39 @@
+version: "3.3"
+
+services:
+  database:
+    image: postgres
+    environment:
+      POSTGRESQL_USERNAME: health_status
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis
+    command: redis-server --appendonly yes
+    hostname: redis
+    ports:
+      - "6379"
+    volumes:
+      - /home/duducp/Redis:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app:cached
+    command: python3 app.py
+    depends_on:
+      - database
+      - redis
+    ports:      
+      - "5000:5000"
+
+volumes:
+  db_data:
+  redis:
